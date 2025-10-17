@@ -31,6 +31,7 @@ def load_secrets() -> None:
             file.write("{}")
 
 load_secrets()
+
 def get_secret(name: str) -> str | None:
     """Retrieves a secret by name."""
     return secrets.get(name)
