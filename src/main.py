@@ -34,6 +34,7 @@ load_secrets()
 
 def get_secret(name: str) -> str | None:
     """Retrieves a secret by name."""
+    print("test",secrets.get(name))
     return secrets.get(name)
 
 def hash_secret(value: str, encodingType: str) -> str:
@@ -57,14 +58,16 @@ def hash_secret(value: str, encodingType: str) -> str:
 
 @app.post("/secrets/")
 async def create_secret(secret: Secret):
+    global secrets
     """Creates a new secret."""
     if secret.name in secrets:
         raise HTTPException(status_code=400, detail="Secret name already exists")
     secrets[secret.name] = secret.value
     json_secrets = json.dumps(secrets, indent=4)
-    with open("secrets.json", "r+") as f:
-        f.write(json_secrets)
-        secrets = json.load(file)
+    with open("secrets.json", "w") as file:
+        file.write(json_secrets)
+        json.dump(secrets, file, indent=4)
+        print("secrets",secrets)
     return {"message": "Secret created successfully"}
 
 @app.get("/secrets/{name}")
@@ -73,7 +76,7 @@ async def get_secret_by_name(name: str):
     secret_value = get_secret(name)
     if secret_value is None:
         raise HTTPException(status_code=404, detail="Secret not found")
-    return {"sha256_hash": hash_secret(secret_value)}
+    return {"sha256_hash": hash_secret(secret_value,"sha256")}
 
 
 
