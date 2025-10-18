@@ -93,13 +93,13 @@ async def get_secrets_by_name(encoding_method: str | None = None):
 
 
 @app.get("/secrets/{name}")
-async def get_secret_by_name(name: str):
+async def get_secret_by_name(name: str, encoding_method: str):
+    print("Yes")
     """Retrieves a secret by name, outputting its SHA256 hash."""
     secret_value = get_secret(name)
     if secret_value is None:
         raise HTTPException(status_code=404, detail="Secret not found")
-    return {"sha256_hash": hash_secret(secret_value,"sha256")}
-
+    return {"hash": hash_secret(secret_value,encoding_method)}
 
 
 @app.post("/auth/", status_code=200)
@@ -108,7 +108,8 @@ async def authenticate(token: AuthToken):
     print("sk",shared_key)
     if not hmac.compare_digest(token.token,shared_key or ""):
             raise HTTPException(status_code=401, detail="Authentication failed")
-    return {"message": "Authentication successful"}
+    else:
+        return {"message": "Authentication successful"}
          
 
 
