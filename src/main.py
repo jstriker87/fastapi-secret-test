@@ -5,11 +5,20 @@ import os
 from dotenv import load_dotenv
 import hmac
 import json
-
+from fastapi.middleware.cors import CORSMiddleware
 load_dotenv() 
 
-key = os.getenv("SHARED_KEY")
 app = FastAPI()
+origins = [
+    "http://localhost:3000",
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 secrets = {}
 
@@ -21,20 +30,22 @@ class AuthToken(BaseModel):
     token: str
 
 
+shared_key = os.getenv("SHARED_KEY")
+secrets_path = "/var/lib/backend/persistence/secrets.json"
 def load_secrets() -> None:
     try:
         global secrets
-        with open('secrets.json', 'r') as file:
+
+        with open(secrets_path, "r") as file:
             secrets = json.load(file)
     except FileNotFoundError:
-        with open('secrets.json', 'w') as file:
+        with open(secrets_path, "w") as file:
             file.write("{}")
 
 load_secrets()
 
 def get_secret(name: str) -> str | None:
     """Retrieves a secret by name."""
-    print("test",secrets.get(name))
     return secrets.get(name)
 
 def hash_secret(value: str, encodingType: str) -> str:
@@ -63,12 +74,23 @@ async def create_secret(secret: Secret):
     if secret.name in secrets:
         raise HTTPException(status_code=400, detail="Secret name already exists")
     secrets[secret.name] = secret.value
-    json_secrets = json.dumps(secrets, indent=4)
-    with open("secrets.json", "w") as file:
-        file.write(json_secrets)
+    with open(secrets_path, "w") as file:
         json.dump(secrets, file, indent=4)
         print("secrets",secrets)
     return {"message": "Secret created successfully"}
+
+
+@app.get("/secrets/")
+async def get_secrets_by_name(encoding_method: str | None = None):
+    """Retrieves a secret by name, outputting its SHA256 hash."""
+    if encoding_method is None:
+        encoding_method = "sha256"
+
+    all_secrets = list(map(lambda secret: { "name": secret[0], "value": hash_secret(secret[1], encoding_method)}, zip(secrets.keys(), secrets.values())))
+    return all_secrets
+
+
+
 
 @app.get("/secrets/{name}")
 async def get_secret_by_name(name: str):
@@ -82,7 +104,8 @@ async def get_secret_by_name(name: str):
 
 @app.post("/auth/", status_code=200)
 async def authenticate(token: AuthToken):
-    shared_key = os.getenv("SHARED_KEY")
+    global shared_key
+    print("sk",shared_key)
     if not hmac.compare_digest(token.token,shared_key or ""):
             raise HTTPException(status_code=401, detail="Authentication failed")
     return {"message": "Authentication successful"}
