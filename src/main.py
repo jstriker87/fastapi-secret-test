@@ -76,7 +76,6 @@ async def create_secret(secret: Secret):
     secrets[secret.name] = secret.value
     with open(secrets_path, "w") as file:
         json.dump(secrets, file, indent=4)
-        print("secrets",secrets)
     return {"message": "Secret created successfully"}
 
 
@@ -105,7 +104,6 @@ async def get_secret_by_name(name: str, encoding_method: str):
 @app.post("/auth/", status_code=200)
 async def authenticate(token: AuthToken):
     global shared_key
-    print("sk",shared_key)
     if not hmac.compare_digest(token.token,shared_key or ""):
             raise HTTPException(status_code=401, detail="Authentication failed")
     else:

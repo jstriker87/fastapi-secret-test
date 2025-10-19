@@ -1,12 +1,16 @@
-# fastapi-secrets
+# fastapi-secrets-backend
 
-## Getting started
+## Prerequisites
+- In order to test the tokens, an enviroment variables file (.env) must be created in this 'backend' folder
+- In env should contain a line with a SHARED_KEY. An example is: SHARED_KEY=ASDF12345QWERTY1234
+- Alternatively in Mac or linux in this 'backend' folder you can write into the .env from the command line using echo "SECRET_KEY=ADSDFQWERTY123456" > .env
 
-An online test for python and fastapi...
 
-1. Add different secret encodings than just SHA and make it possible to select the one you want to use.
-2. Add a valid /auth endpoint that takes a token and validates it.
-3. Add a persistent backend for the secrets rather than the current hash stored in memory.
-4. Finally build and run the container and show you can access it via the /docs endpoint, show all the features above..
-5. If needed create a docker-compose file if you want to run any other container along with this one.
+## Running instructions
+- Ensure that you are in this 'backend' folder
+- Run:
+    - docker compose up --build
+- The backend will then be active on port 8000
+
+
 
